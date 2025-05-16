@@ -1,33 +1,46 @@
 import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
 import './App.css'
+import Relay from './Relay'
+import knownRelays from './knownRelays'
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [relays, setRelays] = useState([]);
+
+  const recieveEvent = () => null;
 
   return (
     <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+      <h1>compare hoses</h1>
+      <p><em>warning: enabling many relay connections requires a lot of bandwidth</em></p>
+
+      <form style={{ display: 'block', textAlign: 'left' }}>
+        {knownRelays.map(({ url, desc }) => (
+          <p key={url} style={{margin: 0}}>
+            <label>
+              <input
+                type="checkbox"
+                onInput={e => e.target.checked
+                  ? relays.includes(url) || setRelays([...relays, url])
+                  : setRelays(relays.filter(u => u !== url))
+                }
+              />
+              { ` ${desc} ` }
+              (<code>{ url.slice('wss://'.length) }</code>)
+            </label>
+          </p>
+        ))}
+      </form>
+
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '2em', textAlign: 'left' }}>
+        {relays.map(url => {
+          const { desc } = knownRelays.find(e => e.url === url);
+          return (
+            <div key={url}>
+              <Relay url={url} desc={desc} onRecievedEvent={(type, event) => recieveEvent(url, type, event)} />
+            </div>
+          );
+        })}
       </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
     </>
   )
 }
