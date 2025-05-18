@@ -4,20 +4,20 @@ import './Relay.css';
 
 type firehoseState = 'connecting' | 'connected' | 'errored' | 'closed';
 
-function Relay({ url, desc, onRecievedEvent }) {
+function Relay({ url, desc, onRecieveEvent }) {
   const [state, setState] = useState('connecting');
   const [commits, setCommits] = useState(0);
 
   useEffect(() => {
     const sendIt = (type, event) => {
-      onRecievedEvent(type, event);
+      onRecieveEvent(type, event);
       setCommits(n => n + 1);
     };
     const firehose = new Firehose({ relay: url });
     firehose.on('open', () => setState('connected'));
     firehose.on('close', () => setState('closed'));
     firehose.on('reconnect', (...args) => console.info('reconnect', ...args));
-    firehose.on('error', () => setState('errored'));
+    firehose.on('error', e => console.error(e) || setState('errored'));
     firehose.on('websocketError', () => setState('errored'));
     firehose.on('commit', (ev) => sendIt('commit', ev));
     firehose.on('sync', (ev) => sendIt('sync', ev));
