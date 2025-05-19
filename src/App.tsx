@@ -7,21 +7,39 @@ import knownRelays from './knownRelays'
 
 const INTERVAL = 1600;
 const SERIES_LEN = 6;
+const KEEPALIVE = 10 * 60 * 1000;
 
 function App() {
   const [relays, setRelays] = useState([]);
   const [receiver, setReceiver] = useState(() => () => null);
+  const [keepalive, setKeepalive] = useState(() => () => null);
   const [rateBars, setRateBars] = useState({ series: [] });
+  const [died, setDied] = useState(false);
 
   useEffect(() => {
     let lastChangeover = performance.now();
     let currentCounts = {};
     let series = [];
+    let raf = requestAnimationFrame(update);
+    let ttl = setTimeout(die, KEEPALIVE);
 
     setReceiver(() => (url, type, event) => {
       if (!currentCounts[url]) currentCounts[url] = 0;
       currentCounts[url] += 1;
     });
+
+    setKeepalive(() => () => {
+      clearTimeout(ttl);
+      ttl = setTimeout(die, KEEPALIVE);
+      setDied(false);
+      console.info('keepalive: disconnection timer reset');
+    });
+
+    function die() {
+      console.info('disconnecting due to inactivity');
+      setRelays([]);
+      setDied(true);
+    }
 
     const nextBlock = setInterval(() => {
       let now = performance.now();
@@ -36,7 +54,7 @@ function App() {
       currentCounts = {};
     }, INTERVAL);
 
-    const update = () => {
+    function update() {
       let now = performance.now();
       let dt = (now - lastChangeover) / 1000;
       const relays = Object.keys(series.at(-1)?.counts || {}).toSorted();
@@ -64,14 +82,25 @@ function App() {
 
       raf = requestAnimationFrame(update);
     };
-    let raf = requestAnimationFrame(update);
 
     return () => {
       setReceiver(() => () => null);
+      setKeepalive(() => () => null);
       clearInterval(nextBlock);
       cancelAnimationFrame(raf);
     };
   }, []);
+
+
+  function showRelay(url, show) {
+    setDied(false);
+    if (show) {
+      setRelays(rs => rs.includes(url) ? rs : [...rs, url]);
+    } else {
+      setRelays(rs => rs.includes(url) ? rs.filter(u => u !== url) : rs);
+    }
+    keepalive();
+  }
 
   return (
     <>
@@ -84,10 +113,8 @@ function App() {
             <label>
               <input
                 type="checkbox"
-                onInput={e => e.target.checked
-                  ? relays.includes(url) || setRelays([...relays, url])
-                  : setRelays(relays.filter(u => u !== url))
-                }
+                onChange={e => showRelay(url, e.target.checked)}
+                checked={relays.includes(url)}
               />
               { ` ${desc} ` }
               (<code>{ url.slice('wss://'.length) }</code>)
@@ -110,6 +137,11 @@ function App() {
           );
         })}
       </div>
+
+      {died && (
+        <p><em>disconnected to save bandwidth due to inactivity</em></p>
+      )}
+
       <div className="throughputs">
         <BarChart
           height={300}
