@@ -7,6 +7,7 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
+    "gh-pages": "vite build && cp docs/CNAME dist/ && rm -fr docs && mv dist docs",
     "preview": "vite preview"
   },
   "dependencies": {
