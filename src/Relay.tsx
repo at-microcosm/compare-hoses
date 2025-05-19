@@ -2,15 +2,19 @@ import { useEffect, useState } from 'react';
 import { Firehose } from '@skyware/firehose';
 import './Relay.css';
 
-type firehoseState = 'connecting' | 'connected' | 'errored' | 'closed';
+type HoseState = 'connecting' | 'connected' | 'errored' | 'closed';
 
-function Relay({ url, desc, onRecieveEvent }) {
-  const [state, setState] = useState('connecting');
+function Relay({ url, desc, onRecieveEvent }: {
+  url: string,
+  desc: string,
+  onRecieveEvent: (type: string, event: any) => void,
+}) {
+  const [state, setState] = useState('connecting' as HoseState);
   const [commits, setCommits] = useState(0);
   const [reconnects, setReconnects] = useState(0);
 
   useEffect(() => {
-    const sendIt = (type, event) => {
+    const sendIt = (type: string, event: any) => {
       onRecieveEvent(type, event);
       setCommits(n => n + 1);
     };
@@ -18,7 +22,10 @@ function Relay({ url, desc, onRecieveEvent }) {
     firehose.on('open', () => setState('connected'));
     firehose.on('close', () => setState('closed'));
     firehose.on('reconnect', () => setReconnects(n => n + 1));
-    firehose.on('error', e => console.error('oops', e) || setState('errored'));
+    firehose.on('error', e => {
+      console.error('oops', e);
+      setState('errored');
+    });
     firehose.on('websocketError', () => setState('errored'));
     firehose.on('commit', (ev) => sendIt('commit', ev));
     firehose.on('sync', (ev) => sendIt('sync', ev));

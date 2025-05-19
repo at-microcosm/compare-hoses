@@ -3,27 +3,44 @@ import { BarChart } from '@mui/x-charts/BarChart';
 import './App.css'
 import '@mui/x-charts-vendor/d3-scale'
 import Relay from './Relay'
-import knownRelays from './knownRelays'
+import knownRelays from './knownRelays.json'
 
 const INTERVAL = 1600;
 const SERIES_LEN = 6;
 const KEEPALIVE = 10 * 60 * 1000;
 
+interface Relay {
+  url: string,
+  desc: string,
+};
+
+interface Counts {
+  [k: string]: number,
+};
+
+interface CountBatch {
+  t: number,
+  dt: number,
+  counts: Counts,
+};
+
+const noopReceiver = (_url: string, _type: string, _event: any) => {};
+
 function App() {
-  const [relays, setRelays] = useState([]);
-  const [receiver, setReceiver] = useState(() => () => null);
-  const [keepalive, setKeepalive] = useState(() => () => null);
-  const [rateBars, setRateBars] = useState({ series: [] });
+  const [relays, setRelays] = useState([] as string[]);
+  const [receiver, setReceiver] = useState(() => noopReceiver);
+  const [keepalive, setKeepalive] = useState(() => () => {});
+  const [rateBars, setRateBars] = useState({ series: [] } as any);
   const [died, setDied] = useState(false);
 
   useEffect(() => {
     let lastChangeover = performance.now();
-    let currentCounts = {};
-    let series = [];
+    let currentCounts: Counts = {};
+    let series: CountBatch[] = [];
     let raf = requestAnimationFrame(update);
     let ttl = setTimeout(die, KEEPALIVE);
 
-    setReceiver(() => (url, type, event) => {
+    setReceiver(() => (url: string, _type: string, _event: any) => {
       if (!currentCounts[url]) currentCounts[url] = 0;
       currentCounts[url] += 1;
     });
@@ -56,7 +73,6 @@ function App() {
 
     function update() {
       let now = performance.now();
-      let dt = (now - lastChangeover) / 1000;
       const relays = Object.keys(series.at(-1)?.counts || {}).toSorted();
 
       setRateBars({
@@ -66,7 +82,7 @@ function App() {
             .concat(['now']),
           label: 'bucket (seconds ago)',
         }],
-        series: relays.map(r => ({
+        series: relays.map((r: string) => ({
           label: r,
           data: series
             .map(({ dt, counts }) => {
@@ -84,7 +100,7 @@ function App() {
     };
 
     return () => {
-      setReceiver(() => () => null);
+      setReceiver(() => noopReceiver);
       setKeepalive(() => () => null);
       clearInterval(nextBlock);
       cancelAnimationFrame(raf);
@@ -92,12 +108,12 @@ function App() {
   }, []);
 
 
-  function showRelay(url, show) {
+  function showRelay(url: string, show: boolean) {
     setDied(false);
     if (show) {
-      setRelays(rs => rs.includes(url) ? rs : [...rs, url]);
+      setRelays((rs: string[]) => rs.includes(url) ? rs : [...rs, url]);
     } else {
-      setRelays(rs => rs.includes(url) ? rs.filter(u => u !== url) : rs);
+      setRelays((rs: string[]) => rs.includes(url) ? rs.filter(u => u !== url) : rs);
     }
     keepalive();
   }
@@ -108,7 +124,7 @@ function App() {
       <p><em>warning: enabling many relay connections requires a lot of bandwidth</em></p>
 
       <form style={{ display: 'block', textAlign: 'left' }}>
-        {knownRelays.map(({ url, desc }) => (
+        {knownRelays.map(({ url, desc }: Relay) => (
           <p key={url} style={{margin: 0}}>
             <label>
               <input
@@ -125,13 +141,13 @@ function App() {
 
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '2em', textAlign: 'left' }}>
         {relays.map(url => {
-          const { desc } = knownRelays.find(e => e.url === url);
+          const { desc } = knownRelays.find((r: Relay) => r.url === url)!;
           return (
             <div key={url}>
               <Relay
                 url={url}
                 desc={desc}
-                onRecieveEvent={(type, event) => receiver(url, type, event)}
+                onRecieveEvent={(type: string, event: any) => receiver(url, type, event)}
               />
             </div>
           );
