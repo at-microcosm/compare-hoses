@@ -7,6 +7,7 @@ type firehoseState = 'connecting' | 'connected' | 'errored' | 'closed';
 function Relay({ url, desc, onRecieveEvent }) {
   const [state, setState] = useState('connecting');
   const [commits, setCommits] = useState(0);
+  const [reconnects, setReconnects] = useState(0);
 
   useEffect(() => {
     const sendIt = (type, event) => {
@@ -16,8 +17,8 @@ function Relay({ url, desc, onRecieveEvent }) {
     const firehose = new Firehose({ relay: url });
     firehose.on('open', () => setState('connected'));
     firehose.on('close', () => setState('closed'));
-    firehose.on('reconnect', (...args) => console.info('reconnect', ...args));
-    firehose.on('error', e => console.error(e) || setState('errored'));
+    firehose.on('reconnect', () => setReconnects(n => n + 1));
+    firehose.on('error', e => console.error('oops', e) || setState('errored'));
     firehose.on('websocketError', () => setState('errored'));
     firehose.on('commit', (ev) => sendIt('commit', ev));
     firehose.on('sync', (ev) => sendIt('sync', ev));
@@ -37,6 +38,9 @@ function Relay({ url, desc, onRecieveEvent }) {
       <h2>{ desc }</h2>
       <p><code>{ url }</code></p>
       <p>[<code>{ state }</code>] (<code>{ commits.toLocaleString() }</code> events)</p>
+      {(reconnects > 0) && (
+        <p>reconnects: <code>{reconnects}</code></p>
+      )}
     </div>
   );
 }

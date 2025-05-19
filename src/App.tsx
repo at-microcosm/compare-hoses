@@ -43,14 +43,22 @@ function App() {
 
       setRateBars({
         xAxis: [{
-          data: series.map(({ t }) => (-(now - t) / 1000).toFixed(1))
+          data: series
+            .map(({ t }) => (-(now - t) / 1000).toFixed(1))
+            .concat(['now']),
+          label: 'bucket (seconds ago)',
         }],
         series: relays.map(r => ({
           label: r,
-          data: series.map(({ dt, counts }) => {
-            if (!counts[r]) return null;
-            return (counts[r] / (dt / 1000)).toFixed(1);
-          }),
+          data: series
+            .map(({ dt, counts }) => {
+              if (!counts[r]) return null;
+              return (counts[r] / (dt / 1000)).toFixed(1);
+            })
+            .concat([!currentCounts[r]
+              ? null
+              : (currentCounts[r] / (INTERVAL / 1000)).toFixed(1)
+            ]),
         })),
       });
 
@@ -102,9 +110,11 @@ function App() {
           );
         })}
       </div>
-      <div className=".throughputs">
+      <div className="throughputs">
         <BarChart
           height={300}
+          yAxis={[{ label: 'events / sec' }]}
+          skipAnimation={true}
           {...rateBars}
         />
       </div>
