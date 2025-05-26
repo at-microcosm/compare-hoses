@@ -32,6 +32,7 @@ function App() {
   const [keepalive, setKeepalive] = useState(() => () => {});
   const [rateBars, setRateBars] = useState({ series: [] } as any);
   const [died, setDied] = useState(false);
+  const [customRelayHost, setCustomRelayHost] = useState("");
 
   useEffect(() => {
     let lastChangeover = performance.now();
@@ -118,6 +119,24 @@ function App() {
     keepalive();
   }
 
+  function getCustomRelayURL(): string {
+    if (!customRelayHost) return "";
+
+    try {
+      let url: URL;
+      if (customRelayHost.includes("://")) {
+        url = new URL(customRelayHost);
+      } else {
+        url = new URL("https://" + customRelayHost);
+      }
+      url.protocol = url.protocol === "https:" ? "wss:" : "ws:";
+
+      return url.origin;
+    } catch (err) {
+      return "";
+    }
+  }
+
   return (
     <>
       <h1>compare hoses</h1>
@@ -137,11 +156,37 @@ function App() {
             </label>
           </p>
         ))}
+
+        <p style={{margin: 0}}>
+          <label>
+            <input
+              type='checkbox'
+              onChange={e => {
+                const url = getCustomRelayURL();
+                if (url) showRelay(url, e.target.checked);
+              }}
+              checked={relays.includes(getCustomRelayURL())}
+            />
+            {` `}
+            <input
+              type='text'
+              placeholder='wss://…'
+              value={customRelayHost}
+              onChange={(e) => {
+                const oldURL = getCustomRelayURL();
+                setRelays(relays => relays.includes(oldURL) ? relays.filter(u => u !== oldURL) : relays);
+                setCustomRelayHost(e.target.value);
+              }}
+            />
+            {` `}
+            {customRelayHost && (<code>{getCustomRelayURL()}</code>)}
+          </label>
+        </p>
       </form>
 
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '2em', textAlign: 'left' }}>
         {relays.map(url => {
-          const { desc } = knownRelays.find((r: Relay) => r.url === url)!;
+          const { desc } = knownRelays.find((r: Relay) => r.url === url) ?? { desc: "custom relay" };
           return (
             <div key={url}>
               <Relay
