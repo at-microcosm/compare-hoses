@@ -129,8 +129,11 @@ function App() {
       } else {
         url = new URL("https://" + customRelayHost);
       }
-      url.protocol = url.protocol === "https:" ? "wss:" : "ws:";
-
+      if (url.protocol === 'https:') {
+        url.protocol = 'wss:';
+      } else if (url.protocol === 'http:') {
+        url.protocol = 'ws:';
+      }
       return url.origin;
     } catch (err) {
       return "";
@@ -176,6 +179,12 @@ function App() {
                 const oldURL = getCustomRelayURL();
                 setRelays(relays => relays.includes(oldURL) ? relays.filter(u => u !== oldURL) : relays);
                 setCustomRelayHost(e.target.value);
+              }}
+              onKeyDown={e => {
+                if (e.key !== 'Enter') return;
+                e.preventDefault();
+                const url = getCustomRelayURL();
+                if (url) showRelay(url, true);
               }}
             />
             {` `}
