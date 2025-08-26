@@ -28,6 +28,8 @@ const noopReceiver = (_url: string, _type: string, _event: any) => {};
 
 function App() {
   const [relays, setRelays] = useState([] as string[]);
+  const [events, setEvents] = useState(['commit', 'sync', 'account', 'identity', 'unknown']);
+  const [eventsSelected, setEventsSelected] = useState(new Set(events));
   const [receiver, setReceiver] = useState(() => noopReceiver);
   const [keepalive, setKeepalive] = useState(() => () => {});
   const [rateBars, setRateBars] = useState({ series: [] } as any);
@@ -143,7 +145,7 @@ function App() {
   return (
     <>
       <h1>compare hoses</h1>
-      <p><em>warning: enabling many relay connections requires a lot of bandwidth</em></p>
+      <p><em>warning: enabling many relay connections requires a <strong>lot</strong> of bandwidth</em></p>
 
       <form style={{ display: 'block', textAlign: 'left' }}>
         {knownRelays.map(({ url, desc }: Relay) => (
@@ -193,6 +195,28 @@ function App() {
         </p>
       </form>
 
+      <form style={{ display: 'block', margin: '1rem 0' }}>
+        <span>events: </span>
+        {events.map(eventName => (
+          <label key={eventName}>
+            <input
+              type='checkbox'
+              checked={eventsSelected.has(eventName)}
+              onChange={e => {
+                setEventsSelected(evs => {
+                  const s = new Set(evs);
+                  if (e.target.checked) s.add(eventName);
+                  else s.delete(eventName);
+                  return s;
+                })
+              }}
+            />
+            {' '}
+            {eventName}
+          </label>
+        ))}
+      </form>
+
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '2em', textAlign: 'left' }}>
         {relays.map(url => {
           const { desc } = knownRelays.find((r: Relay) => r.url === url) ?? { desc: "custom relay" };
@@ -201,6 +225,7 @@ function App() {
               <Relay
                 url={url}
                 desc={desc}
+                includeEvents={eventsSelected}
                 onRecieveEvent={(type: string, event: any) => receiver(url, type, event)}
               />
             </div>
