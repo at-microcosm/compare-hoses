@@ -5,14 +5,30 @@
   },
   {
     "url": "wss://bsky.network",
-    "desc": "Bluesky Rainbow"
+    "desc": "Bluesky primary (+Rainbow)"
   },
   {
-    "url": "wss://relay2.fire.hose.cam",
+    "url": "wss://relay1.us-east.bsky.network",
+    "desc": "Bluesky sync1.1 east (+Rainbow)"
+  },
+  {
+    "url": "wss://relay1.us-west.bsky.network",
+    "desc": "Bluesky sync1.1 west (+Rainbow)"
+  },
+  {
+    "url": "wss://relay.fire.hose.cam",
     "desc": "microcosm Montreal"
   },
   {
     "url": "wss://relay3.fr.hose.cam",
     "desc": "microcosm France"
+  },
+  {
+    "url": "wss://relay.hayescmd.net",
+    "desc": "@edavis.dev's relay"
+  },
+  {
+    "url": "wss://relay.xero.systems",
+    "desc": "@dane.is.extraordinarily.cool's relay"
   }
 ]
