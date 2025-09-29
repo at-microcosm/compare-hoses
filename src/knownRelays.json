@@ -24,6 +24,10 @@
     "desc": "microcosm France"
   },
   {
+    "url": "wss://relay.upcloud.world",
+    "desc": "UpCloud relay"
+  },
+  {
     "url": "wss://relay.hayescmd.net",
     "desc": "@edavis.dev's relay"
   },
