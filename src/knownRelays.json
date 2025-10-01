@@ -34,5 +34,9 @@
   {
     "url": "wss://relay.xero.systems",
     "desc": "@dane.is.extraordinarily.cool's relay"
+  },
+  {
+    "url": "wss://relay.feeds.blue",
+    "desc": "@mackuba.eu's relay (only self-hosters)"
   }
 ]
