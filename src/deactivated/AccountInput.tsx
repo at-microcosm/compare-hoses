@@ -19,7 +19,8 @@ function AccountInput({ onSet, children }: {
     lookup(e.target.value);
   });
 
-  const handleSubmit = useCallback(() => {
+  const handleSubmit = useCallback(e => {
+    e.preventDefault();
     if (foundDoc) {
       onSet(foundDoc);
     } else {
