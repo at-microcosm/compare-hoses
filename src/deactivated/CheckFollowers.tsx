@@ -9,6 +9,8 @@ const INCLUDED_RELAYS = [
   'wss://relay.xero.systems',
   'wss://relay1.us-east.bsky.network',
   'wss://relay1.us-west.bsky.network',
+  'wss://relay.fire.hose.cam',
+  'wss://relay3.fr.hose.cam',
 
   // these relays are ineligible for other reasons:
   // 'wss://atproto.africa', // rsky-relay does not implement getRepoStatus (and doesn't have this bug)
